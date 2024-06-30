@@ -1,0 +1,8 @@
+{
+    "reporter": [
+        "lcov"
+    ],
+    "exclude": [
+        "dist/test"
+    ]
+}
