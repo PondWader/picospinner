@@ -1,6 +1,6 @@
 # picospinner
 
-<img src="assets/demo.gif" width="522" alt="Demo">
+<img src="https://raw.githubusercontent.com/PondWader/picospinner/main/assets/demo.gif" width="522" alt="Demo">
 
 A lightweight, no dependency, pluggable CLI spinner library.
 
