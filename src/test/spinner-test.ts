@@ -8,9 +8,15 @@ import {
 } from './utils.js';
 import * as constants from '../constants';
 
-async function testEndMethod(method: keyof Symbols, type: 'str' | 'obj') {
+async function testEndMethod(
+  method: keyof Symbols,
+  type: 'str' | 'obj',
+  customSymbol?: string
+) {
   const stdout = await interceptStdout(async () => {
-    const spinner = new Spinner();
+    const spinner = new Spinner(undefined, {
+      symbols: customSymbol ? {[method]: customSymbol} : undefined
+    });
     spinner.start();
     spinner[method](
       type === 'str' ? 'lorem ipsum dolor' : {text: 'lorem ipsum dolor'}
@@ -20,7 +26,7 @@ async function testEndMethod(method: keyof Symbols, type: 'str' | 'obj') {
   assert.equal(
     stdout,
     createFinishingRenderedLine(
-      constants.DEFAULT_SYMBOLS[method],
+      customSymbol ?? constants.DEFAULT_SYMBOLS[method],
       'lorem ipsum dolor'
     )
   );
@@ -30,21 +36,25 @@ test('end methods', async (t) => {
   await t.test('.info', async () => {
     await testEndMethod('info', 'str');
     await testEndMethod('info', 'obj');
+    await testEndMethod('info', 'obj', 'I');
   });
 
   await t.test('.succeed', async () => {
     await testEndMethod('succeed', 'str');
     await testEndMethod('succeed', 'obj');
+    await testEndMethod('succeed', 'obj', 'Success');
   });
 
   await t.test('.warn', async () => {
     await testEndMethod('warn', 'str');
     await testEndMethod('warn', 'obj');
+    await testEndMethod('warn', 'obj', '⚠');
   });
 
   await t.test('.fail', async () => {
     await testEndMethod('fail', 'str');
     await testEndMethod('fail', 'obj');
+    await testEndMethod('fail', 'obj', ':(');
   });
 
   await t.test('.stop', async () => {
@@ -134,5 +144,3 @@ test('spinner', async (t) => {
     assert.match(stdout, /baz/g);
   });
 });
-
-test('symbols', async (t) => {});

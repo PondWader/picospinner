@@ -19,7 +19,7 @@ export async function interceptStdout(exec: () => Promise<void> | void) {
   let output = '';
   const stdoutWrite = process.stdout.write.bind(process.stdout);
 
-  // @ts-ignore - types are wrong here for the callback
+  // @ts-expect-error - types are wrong here for the callback
   capcon.startIntercept(process.stdout, (data: string) => {
     // Since stdout is used to communicate test data, the interceptor should write data that is not from picospinner to stdout
     if (
