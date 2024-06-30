@@ -27,6 +27,7 @@ export class Spinner {
   private frames: string[];
   private terminalSize?: [number, number];
   private lastLinesAmt = 0;
+  private linesInText = 0;
 
   constructor(
     display: DisplayOptions | string = '',
@@ -35,11 +36,9 @@ export class Spinner {
     // Merge symbols with defaults
     this.symbols = {...constants.DEFAULT_SYMBOLS, ...symbols};
 
-    if (typeof display === 'string') this.text = display;
-    else {
-      delete display.symbol;
-      this.setDisplay(display, false);
-    }
+    if (typeof display === 'string') display = {text: display};
+    delete display.symbol;
+    this.setDisplay(display, false);
 
     this.frames = frames;
     this.currentSymbol = frames[0];
@@ -73,7 +72,8 @@ export class Spinner {
 
     const output = (symbol ? symbol + ' ' : '') + this.text;
     if (this.terminalSize)
-      this.lastLinesAmt = Math.ceil(output.length / this.terminalSize[0]);
+      this.lastLinesAmt =
+        Math.ceil(output.length / this.terminalSize[0]) + this.linesInText - 1;
     else this.lastLinesAmt = 0;
 
     process.stdout.write(constants.CLEAR_LINE + constants.HIDE_CURSOR + output);
@@ -82,7 +82,10 @@ export class Spinner {
   setDisplay(displayOpts: DisplayOptions = {}, render = true) {
     if (typeof displayOpts.symbol === 'string')
       this.currentSymbol = displayOpts.symbol;
-    if (typeof displayOpts.text === 'string') this.text = displayOpts.text;
+    if (typeof displayOpts.text === 'string') {
+      this.text = displayOpts.text;
+      this.linesInText = countLines(this.text);
+    }
     if (displayOpts.symbolFormatter)
       this.symbolFormatter = displayOpts.symbolFormatter;
 
@@ -92,6 +95,7 @@ export class Spinner {
 
   setText(text: string) {
     this.text = text;
+    this.linesInText = countLines(text);
     if (this.running) this.render();
   }
 
@@ -130,4 +134,8 @@ export class Spinner {
     process.stdout.write(constants.SHOW_CURSOR + (newLine ? '\n' : ''));
     this.running = false;
   }
+}
+
+function countLines(str: string) {
+  return (str.match(/\n/g)?.length ?? 0) + 1;
 }
