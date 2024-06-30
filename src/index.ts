@@ -25,6 +25,8 @@ export class Spinner {
   private frameIndex = 0;
   private symbols: Symbols;
   private frames: string[];
+  private terminalSize?: [number, number];
+  private lastLinesAmt = 0;
 
   constructor(
     display: DisplayOptions | string = '',
@@ -46,6 +48,9 @@ export class Spinner {
   start(tickMs = constants.DEFAULT_TICK_MS) {
     this.interval = setInterval(this.tick.bind(this), tickMs);
     this.running = true;
+    this.terminalSize = process.stdout.getWindowSize
+      ? process.stdout.getWindowSize()
+      : undefined;
   }
 
   tick() {
@@ -54,15 +59,24 @@ export class Spinner {
     this.render();
   }
 
+  private clearMultiLineOutput() {
+    for (let i = 0; i < this.lastLinesAmt - 1; i++) {
+      process.stdout.write(constants.CLEAR_LINE + constants.UP_LINE);
+    }
+  }
+
   render() {
     let symbol = this.currentSymbol;
     if (this.symbolFormatter) symbol = this.symbolFormatter(symbol);
-    process.stdout.write(
-      constants.CLEAR_LINE +
-        constants.HIDE_CURSOR +
-        (symbol ? symbol + ' ' : '') +
-        this.text
-    );
+
+    this.clearMultiLineOutput();
+
+    const output = (symbol ? symbol + ' ' : '') + this.text;
+    if (this.terminalSize)
+      this.lastLinesAmt = Math.ceil(output.length / this.terminalSize[0]);
+    else this.lastLinesAmt = 0;
+
+    process.stdout.write(constants.CLEAR_LINE + constants.HIDE_CURSOR + output);
   }
 
   setDisplay(displayOpts: DisplayOptions = {}, render = true) {
@@ -106,6 +120,7 @@ export class Spinner {
   }
 
   stop() {
+    this.clearMultiLineOutput();
     process.stdout.write(constants.CLEAR_LINE);
     this.end(false);
   }
