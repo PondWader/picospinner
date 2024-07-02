@@ -25,6 +25,10 @@
     "lightweight",
     "minimal"
   ],
+  "bugs": {
+    "url": "https://github.com/PondWader/picospinner/issues"
+  },
+  "homepage": "https://github.com/PondWader/picospinner#readme",
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.6.0",
