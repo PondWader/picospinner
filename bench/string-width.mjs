@@ -1,6 +1,7 @@
 import {Bench} from 'tinybench';
 import {getStringWidth} from '../dist/string-width.js';
 import fastStringTruncatedWidth from 'fast-string-truncated-width';
+import stringWidth from 'string-width';
 
 const fastStringTruncatedWidthOptions = {limit: Infinity, ellipsis: ''};
 
@@ -32,14 +33,13 @@ for (const suite of suites) {
 
   bench
     .add('picospinner getStringWidth()', () => {
-      for (const suite of suites) {
-        getStringWidth(suite.input);
-      }
+      getStringWidth(suite.input);
     })
     .add('fast-string-truncated-width', () => {
-      for (const suite of suites) {
-        fastStringTruncatedWidth(suite.input, fastStringTruncatedWidthOptions, {}).width;
-      }
+      fastStringTruncatedWidth(suite.input, fastStringTruncatedWidthOptions, {}).width;
+    })
+    .add('string-width', () => {
+      stringWidth(suite.input).width;
     });
 
   console.log('Benchmark:', suite.name);
