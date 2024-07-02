@@ -46,7 +46,7 @@ function getCharWidth(ucs: number) {
     : 1;
 }
 
-function stringWidth(str: string) {
+export function getStringWidth(str: string) {
   let width = 0;
   let charCode = 0;
 
@@ -80,8 +80,3 @@ function stringWidth(str: string) {
 
   return width;
 }
-
-// Use bun's stringWidth implementation if available since it's implemented natively and is faster
-let getStringWidth = stringWidth;
-if (typeof Bun !== 'undefined') getStringWidth = Bun.stringWidth;
-export {getStringWidth};

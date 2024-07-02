@@ -4,7 +4,6 @@ import {getStringWidth} from '../string-width';
 import {countLines} from '../string-lines';
 
 // Test cases taken from https://github.com/fabiospampinato/fast-string-truncated-width/blob/master/test/index.js
-//
 
 test('string width', async (t) => {
   await t.test('calculating the width of a string', () => {
