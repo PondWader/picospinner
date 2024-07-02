@@ -1,17 +1,6 @@
 import {Symbols} from '.';
 
-export const DEFAULT_FRAMES = [
-  '⠋',
-  '⠙',
-  '⠹',
-  '⠸',
-  '⠼',
-  '⠴',
-  '⠦',
-  '⠧',
-  '⠇',
-  '⠏'
-];
+export const DEFAULT_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 export const DEFAULT_TICK_MS = 50;
 export const HIDE_CURSOR = '\u001B[?25l';
 export const SHOW_CURSOR = '\u001B[?25h';

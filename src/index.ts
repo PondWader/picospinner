@@ -1,4 +1,5 @@
 import * as constants from './constants';
+import {countLines} from './string-lines';
 
 export type Formatter = (input: string) => string;
 
@@ -21,18 +22,15 @@ export class Spinner {
   private text: string = '';
   private currentSymbol: string;
   private symbolFormatter?: Formatter;
-  private interval?: NodeJS.Timeout;
+  private interval?: Timer;
   private frameIndex = 0;
   private symbols: Symbols;
   private frames: string[];
-  private terminalSize?: [number, number];
+  private terminalWidth: number = Infinity;
   private lastLinesAmt = 0;
-  private linesInText = 0;
+  private framesLineCountCache: number[] = [];
 
-  constructor(
-    display: DisplayOptions | string = '',
-    {frames = constants.DEFAULT_FRAMES, symbols = {} as Partial<Symbols>} = {}
-  ) {
+  constructor(display: DisplayOptions | string = '', {frames = constants.DEFAULT_FRAMES, symbols = {} as Partial<Symbols>} = {}) {
     // Merge symbols with defaults
     this.symbols = {...constants.DEFAULT_SYMBOLS, ...symbols};
 
@@ -42,14 +40,15 @@ export class Spinner {
 
     this.frames = frames;
     this.currentSymbol = frames[0];
+    this.framesLineCountCache = new Array(frames.length).fill(-1);
   }
 
   start(tickMs = constants.DEFAULT_TICK_MS) {
     this.interval = setInterval(this.tick.bind(this), tickMs);
     this.running = true;
-    this.terminalSize = process.stdout.getWindowSize
-      ? process.stdout.getWindowSize()
-      : undefined;
+    if (process.stdout.getWindowSize) this.terminalWidth = process.stdout.getWindowSize()[0];
+    this.currentSymbol = this.frames[0];
+    this.framesLineCountCache.fill(-1);
   }
 
   tick() {
@@ -62,6 +61,15 @@ export class Spinner {
     for (let i = 0; i < this.lastLinesAmt - 1; i++) {
       process.stdout.write(constants.CLEAR_LINE + constants.UP_LINE);
     }
+    process.stdout.write(constants.CLEAR_LINE);
+  }
+
+  private getLineCount(output: string) {
+    let amount = this.framesLineCountCache[this.frameIndex];
+    if (amount !== -1) return amount;
+    amount = countLines(output, this.terminalWidth);
+    this.framesLineCountCache[this.frameIndex] = amount;
+    return amount;
   }
 
   render() {
@@ -71,61 +79,54 @@ export class Spinner {
     this.clearMultiLineOutput();
 
     const output = (symbol ? symbol + ' ' : '') + this.text;
-    if (this.terminalSize)
-      this.lastLinesAmt =
-        Math.ceil(output.length / this.terminalSize[0]) + this.linesInText - 1;
-    else this.lastLinesAmt = 0;
+    this.lastLinesAmt = this.getLineCount(output);
 
-    process.stdout.write(constants.CLEAR_LINE + constants.HIDE_CURSOR + output);
+    process.stdout.write(constants.HIDE_CURSOR + output);
   }
 
   setDisplay(displayOpts: DisplayOptions = {}, render = true) {
-    if (typeof displayOpts.symbol === 'string')
+    if (typeof displayOpts.symbol === 'string') {
       this.currentSymbol = displayOpts.symbol;
-    if (typeof displayOpts.text === 'string') {
-      this.text = displayOpts.text;
-      this.linesInText = countLines(this.text);
+      this.framesLineCountCache.fill(-1);
     }
-    if (displayOpts.symbolFormatter)
-      this.symbolFormatter = displayOpts.symbolFormatter;
+    if (typeof displayOpts.text === 'string') this.setText(displayOpts.text, false);
+    if (displayOpts.symbolFormatter) this.symbolFormatter = displayOpts.symbolFormatter;
 
     if (render) this.render();
     if (typeof displayOpts.symbol === 'string') this.end();
   }
 
-  setText(text: string) {
+  setText(text: string, render = true) {
     this.text = text;
-    this.linesInText = countLines(text);
-    if (this.running) this.render();
+    if (this.running) {
+      // Clear width cache
+      this.framesLineCountCache.fill(-1);
+      if (render) this.render();
+    }
   }
 
   succeed(display?: DisplayOptions | string) {
-    if (typeof display === 'string')
-      this.setDisplay({text: display, symbol: this.symbols.succeed});
+    if (typeof display === 'string') this.setDisplay({text: display, symbol: this.symbols.succeed});
     else this.setDisplay({...display, symbol: this.symbols.succeed});
   }
 
   fail(display?: DisplayOptions | string) {
-    if (typeof display === 'string')
-      this.setDisplay({text: display, symbol: this.symbols.fail});
+    if (typeof display === 'string') this.setDisplay({text: display, symbol: this.symbols.fail});
     else this.setDisplay({...display, symbol: this.symbols.fail});
   }
 
   warn(display?: DisplayOptions | string) {
-    if (typeof display === 'string')
-      this.setDisplay({text: display, symbol: this.symbols.warn});
+    if (typeof display === 'string') this.setDisplay({text: display, symbol: this.symbols.warn});
     else this.setDisplay({...display, symbol: this.symbols.warn});
   }
 
   info(display?: DisplayOptions | string) {
-    if (typeof display === 'string')
-      this.setDisplay({text: display, symbol: this.symbols.info});
+    if (typeof display === 'string') this.setDisplay({text: display, symbol: this.symbols.info});
     else this.setDisplay({...display, symbol: this.symbols.info});
   }
 
   stop() {
     this.clearMultiLineOutput();
-    process.stdout.write(constants.CLEAR_LINE);
     this.end(false);
   }
 
@@ -133,9 +134,6 @@ export class Spinner {
     clearInterval(this.interval);
     process.stdout.write(constants.SHOW_CURSOR + (newLine ? '\n' : ''));
     this.running = false;
+    this.lastLinesAmt = 0;
   }
-}
-
-function countLines(str: string) {
-  return (str.match(/\n/g)?.length ?? 0) + 1;
 }

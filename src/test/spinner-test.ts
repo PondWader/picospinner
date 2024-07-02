@@ -1,35 +1,19 @@
 import * as assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {Spinner, Symbols} from '..';
-import {
-  createFinishingRenderedLine,
-  createRenderedLine,
-  interceptStdout
-} from './utils.js';
+import {createFinishingRenderedLine, createRenderedLine, interceptStdout} from './utils.js';
 import * as constants from '../constants';
 
-async function testEndMethod(
-  method: keyof Symbols,
-  type: 'str' | 'obj',
-  customSymbol?: string
-) {
+async function testEndMethod(method: keyof Symbols, type: 'str' | 'obj', customSymbol?: string) {
   const stdout = await interceptStdout(async () => {
     const spinner = new Spinner(undefined, {
       symbols: customSymbol ? {[method]: customSymbol} : undefined
     });
     spinner.start();
-    spinner[method](
-      type === 'str' ? 'lorem ipsum dolor' : {text: 'lorem ipsum dolor'}
-    );
+    spinner[method](type === 'str' ? 'lorem ipsum dolor' : {text: 'lorem ipsum dolor'});
   });
 
-  assert.equal(
-    stdout,
-    createFinishingRenderedLine(
-      customSymbol ?? constants.DEFAULT_SYMBOLS[method],
-      'lorem ipsum dolor'
-    )
-  );
+  assert.equal(stdout, createFinishingRenderedLine(customSymbol ?? constants.DEFAULT_SYMBOLS[method], 'lorem ipsum dolor'));
 }
 
 test('end methods', async (t) => {
@@ -78,11 +62,7 @@ test('end methods', async (t) => {
   });
 });
 
-async function testSpinner(
-  frames?: string[],
-  text?: string,
-  symbolFormatter?: (v: string) => string
-) {
+async function testSpinner(frames?: string[], text?: string, symbolFormatter?: (v: string) => string) {
   const stdout = await interceptStdout(
     () =>
       new Promise((resolve) => {
@@ -116,15 +96,9 @@ async function testSpinner(
 
 test('spinner', async (t) => {
   await t.test('spins', () => testSpinner());
-  await t.test('spins with custom frames', () =>
-    testSpinner(['-', '\\', '|', '/'])
-  );
-  await t.test('spins with custom text', () =>
-    testSpinner(undefined, 'lorem ipsum dolor')
-  );
-  await t.test('spins with custom formatter', () =>
-    testSpinner(undefined, 'lorem ipsum dolor', (v) => 'abc' + v)
-  );
+  await t.test('spins with custom frames', () => testSpinner(['-', '\\', '|', '/']));
+  await t.test('spins with custom text', () => testSpinner(undefined, 'lorem ipsum dolor'));
+  await t.test('spins with custom formatter', () => testSpinner(undefined, 'lorem ipsum dolor', (v) => 'abc' + v));
   await t.test('changing text', async () => {
     const stdout = await interceptStdout(
       () =>

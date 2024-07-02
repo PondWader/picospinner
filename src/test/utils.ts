@@ -3,12 +3,7 @@ import * as constants from '../constants';
 import {isAbsolute} from 'path';
 
 export function createRenderedLine(symbol: string, text: string) {
-  return (
-    constants.CLEAR_LINE +
-    constants.HIDE_CURSOR +
-    (symbol ? symbol + ' ' : '') +
-    text
-  );
+  return constants.CLEAR_LINE + constants.HIDE_CURSOR + (symbol ? symbol + ' ' : '') + text;
 }
 
 export function createFinishingRenderedLine(symbol: string, text: string) {
@@ -22,14 +17,7 @@ export async function interceptStdout(exec: () => Promise<void> | void) {
   // @ts-expect-error - types are wrong here for the callback
   capcon.startIntercept(process.stdout, (data: string) => {
     // Since stdout is used to communicate test data, the interceptor should write data that is not from picospinner to stdout
-    if (
-      getCallstack().some(
-        (call) =>
-          call.includes('/dist/') &&
-          !call.includes('/test/') &&
-          !call.includes('/node_modules/')
-      )
-    ) {
+    if (getCallstack().some((call) => call.includes('/dist/') && !call.includes('/test/') && !call.includes('/node_modules/'))) {
       output += data;
     } else stdoutWrite(data);
   });
