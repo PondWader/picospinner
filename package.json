@@ -34,6 +34,10 @@
   "bugs": {
     "url": "https://github.com/tinylibs/picospinner/issues"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tinylibs/picospinner.git"
+  },
   "homepage": "https://github.com/tinylibs/picospinner#readme",
   "license": "MIT",
   "devDependencies": {
